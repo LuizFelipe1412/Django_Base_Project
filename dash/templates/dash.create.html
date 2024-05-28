@@ -1,0 +1,23 @@
+{% extends 'skeleton.html' %}
+{% block title %}Creating a new dashboard{% endblock %}
+{% block content %}
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Create a new dashboard</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form }}
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'dash-home' %}" class="btn btn-default">Dash Home</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

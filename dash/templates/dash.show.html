@@ -1,0 +1,263 @@
+{% extends 'skeleton.html' %}
+{% load static %}
+{% block title %}SIG :: Dashboards{% endblock %}
+{% block page-h1 %} Dashboards {% endblock %}
+
+{% block css %}
+    <script src="{% static 'js/Plotly-2.31.1.min.js' %}" charset="utf-8"></script>
+    <link rel="stylesheet" href="{% static 'plugins/leaflet/leaflet.css' %}" />
+    <script src="{% static 'plugins/leaflet/leaflet.js' %}"></script>
+    <style>
+        .legend {
+            line-height: 18px;
+            color: #555;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+    </style>
+{% endblock %}
+
+{% block content-menu %}
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div id="plotly-test"
+                    style="
+                        min-height: 250px;
+                        height: 250px;
+                        max-height: 250px;
+                        max-width: 100%;">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div id="maptest"
+                    style="
+                        min-height: 250px;
+                        height: 250px;
+                        max-height: 250px;
+                        max-width: 100%;"
+                    class="leaflet-container">
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'plugins/chart.js/Chart.min.js' %}"></script>
+    <!-- <script src="{% static 'js/chart-builder/chart-builder.js' %}"></script> -->
+    <script>
+
+        function setPlotlyLegendPosition() {
+            if (window.innerWidth > window.innerHeight) {
+                return 'v'; // horizontal orientation
+            } else {
+                return 'h'; // vertical orientation
+            }
+        }
+
+        var chart_builder = JSON.parse('{{ chart_builder|escapejs|safe }}')
+        
+        $(function () {
+            
+            for(var plot in chart_builder){
+                if(Object.keys(chart_builder[plot]).length !== 0) {
+                    $('#render_target').append(
+                        '<div class="col-md-'+chart_builder[plot].size_in_cols+'">'+'<div class="card">'+'<div class="card-body">'+'<div id="chart">'+'<canvas id="'+chart_builder[plot].id_name+'" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>'+'</div>'+'</div>'+'</div>'+'</div>'
+                    )
+                    var chartCanvas = $('#'+chart_builder[plot].id_name).get(0).getContext('2d')
+                    var chartData = {
+                        labels: chart_builder[plot].data.labels,
+                        datasets: [{
+                            label: chart_builder[plot].data.datasets.label,
+                            fill: chart_builder[plot].data.datasets.fill,
+                            data: chart_builder[plot].data.datasets.data,
+                            backgroundColor: 'backgroundColor' in chart_builder[plot].data.datasets ? chart_builder[plot].data.datasets.backgroundColor : null,
+                            borderColor: 'borderColor' in chart_builder[plot].data.datasets ? chart_builder[plot].data.datasets.borderColor : null, 
+                        }]
+                    }
+
+                    var chartOptions = {
+                        maintainAspectRatio: chart_builder[plot].options.maintainAspectRatio,
+                        responsive: chart_builder[plot].options.responsive 
+                    }
+                    new Chart(chartCanvas,{
+                        type: chart_builder[plot].type,
+                        data: chartData,
+                        options: chartOptions
+                    })
+                
+                }
+            }
+
+        })
+
+        const LAYOUT = {
+                margin: { t: 25, b: 25, l: 25, r: 25},
+                showlegend: true,
+                legend: {
+                    orientation: setPlotlyLegendPosition(),
+                },
+                yaxis: {
+                    dtick: 1
+                }
+            }
+        
+        const TESTER = document.getElementById('plotly-test');
+
+        Plotly.newPlot(TESTER, 
+            [
+                {
+                    x: chart_builder[0].data.labels,
+                    y: chart_builder[0].data.datasets.data,
+                    type: 'line',
+                    name: 'Vendas Teste',
+                }
+            ],
+            layout = LAYOUT,
+            {
+                displaylogo: false,
+                responsive: true
+            }
+        );
+
+        const MAPTEST = document.getElementById('maptest');
+
+        var populationData = {
+            "Macapá": 442933,
+            "Santana": 107618,
+            "Laranjal do Jari": 35114,
+            "Oiapoque": 27482,
+            "Mazagão": 21924,
+            "Porto Grande": 17848,
+            "Tartarugalzinho": 12945,
+            "Pedra Branca do Amapari": 12847,
+            "Vitória do Jari": 11291,
+            "Calçoene": 10612,
+            "Amapá": 7943,
+            "Ferreira Gomes": 6666,
+            "Itaubal": 5599,
+            "Serra do Navio": 4673,
+            "Cutias": 4461,
+            "Pracuúba": 3803 ,
+        };
+        
+        var geojsonUrl = "{% static 'geadata/brazil/states/ap-geodata.json' %}"
+
+        var map = L.map('maptest').setView([1.6389, -52.0705], 5.5);
+
+        var tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+        }).addTo(map);
+
+        var info = L.control();
+
+        info.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        }
+
+        info.update = function (props) {
+            this._div.innerHTML = '<h4>População</h4>' +  (props ?
+                '<b>' + props.name + '</b><br />' + populationData[props.name] + ' pessoas'
+                : 'Passe o mouse' + '<br />' +'sobre um município');
+        }
+
+        info.addTo(map);
+        
+        function setColor(pop) {
+            var minPop = Math.min(...Object.values(populationData));
+            var maxPop = Math.max(...Object.values(populationData));
+            var range = maxPop - minPop;
+            var value = (pop - minPop) / range;
+            var color = `rgba(255, ${Math.round(255 - value * 255)}, 0, 1)`;
+            return color;
+        }
+
+        var geojson;
+        
+        function style(feature) {
+            return {
+                fillColor: setColor(populationData[feature.properties.name]),
+                weight: 2,
+                opacity: 1,
+                color: 'white',
+                dashArray: '3',
+                fillOpacity: 0.7
+            };
+        
+        }
+
+        function highlightFeature(e) {
+            var layer = e.target;
+        
+            layer.setStyle({
+                weight: 5,
+                color: '#666',
+                dashArray: '',
+                fillOpacity: 0.7
+            });
+        
+            layer.bringToFront();
+            info.update(layer.feature.properties);    
+        }
+
+        function resetHighlight(e) {
+            geojson.resetStyle(e.target);
+            info.update();
+        }
+
+        function zoomToFeature(e) {
+            map.fitBounds(e.target.getBounds());
+        }
+
+        function onEachFeature(feature, layer) {
+            layer.on({
+                mouseover: highlightFeature,
+                mouseout: resetHighlight,
+                click: zoomToFeature
+            });
+        }
+
+        var legend = L.control({position: 'bottomright'});
+
+        legend.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'info legend'),
+                grades = [0, 10000, 20000, 50000, 100000, 200000, 500000],
+                labels = [];
+
+            for (var i = 0; i < grades.length; i++) {
+                div.innerHtml += '<i style="background:' + setColor(grades[i] + 1) + '"></i> ' +
+                grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+            }
+            
+            return div;
+        };
+
+        legend.addTo(map);
+
+        fetch(geojsonUrl)
+            .then(response => response.json())
+            .then(data => {
+                geojson = L.geoJSON(
+                    data, {
+                        style: style,
+                        onEachFeature: onEachFeature
+                    }
+                ).addTo(map);
+            });
+
+
+    </script>
+{% endblock %}

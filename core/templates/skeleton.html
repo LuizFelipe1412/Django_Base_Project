@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>
+      {% block title %}{% endblock %}
+    </title>
+    {% include 'css.html' %}
+    {% block css %}{% endblock %}
+</head>
+
+<body class="hold-transition sidebar-mini sidebar-collapse layout-navbar-fixed">
+    <div class="wrapper">
+            {% include 'navbar.html' %}
+            {% include 'sidebar.html' %}
+
+            <div class="content-wrapper">
+                <!-- Content Header (Page header) -->
+                <section class="content-header">
+                  <div class="container-fluid">
+                    <div class="row mb-2">
+                      <div class="col-sm-6">
+                        <h1>{% block page-h1 %}{% endblock %}</h1>
+                      </div>
+                      <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                          {% include 'breadcrumb.html' %}
+                          {% block breadcrumb %}{% endblock %}
+                        </ol>
+                      </div>
+                    </div>
+                  </div><!-- /.container-fluid -->
+                </section>
+
+                <section class="content">
+                    <div class="container-fluid">
+                      <div class="row">
+                        {% block content-menu %}
+                        {% endblock %}
+                      </div>
+                      <div class="row" id="render_target">
+                          {% block content %}
+                          
+                          {% endblock %}
+                    </div>
+                </div>
+              </section>
+
+            </div>
+
+            {% include 'footer.html' %}
+            {% include 'control-sidebar.html' %}
+    </div>
+    {% include 'js.html' %}
+    {% block js %}{% endblock %}
+</body>
+
+</html>

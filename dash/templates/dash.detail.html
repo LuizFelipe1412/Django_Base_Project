@@ -1,0 +1,25 @@
+{% extends 'skeleton.html' %}
+{% block title %}Dashboard {{ dashboard.name }}{% endblock %}
+{% block content %}
+<div class="col-md-12">
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">Editing Dashboard</h4>
+        </div>
+        <div class="card-body">
+            <form method="#">
+                {% csrf_token %}
+                {{ form }}
+                <div class="form-group">
+                    <a href="#" class="btn btn-primary">Update</a>
+                </div>
+            </form>
+        </div>
+        <div class="card-footer">
+            <a href="javascript:history.back()" class="btn btn-default">
+                Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
